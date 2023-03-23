@@ -5,7 +5,7 @@ import json
 # ? flask - library used to write REST API endpoints (functions in simple words) to communicate with the client (view) application's interactions
 # ? request - is the default object used in the flask endpoints to get data from the requests
 # ? Response - is the default HTTP Response object, defining the format of the returned data by this api
-from flask import Flask, request, Response
+from flask import Flask, request, Response, render_template
 # ? sqlalchemy is the main library we'll use here to interact with PostgresQL DBMS
 import sqlalchemy
 # ? Just a class to help while coding by suggesting methods etc. Can be totally removed if wanted, no change
@@ -38,8 +38,11 @@ data_types = {
 }
 
 # ? @app.get is called a decorator, from the Flask class, converting a simple python function to a REST API endpoint (function)
+@app.route("/")
+def index():
+    return render_template("frontview.html")
 
-
+'''
 @app.get("/table")
 def get_relation():
     # ? This method returns the contents of a table whose name (table-name) is given in the url `http://localhost:port/table?name=table-name`
@@ -241,7 +244,7 @@ def generate_create_table_statement(table: Dict):
 # ? This method can be used by waitress-serve CLI 
 def create_app():
    return app
-
+'''
 # ? The port where the debuggable DB management API is served
 PORT = 4173
 # ? Running the flask app on the localhost/0.0.0.0, port 2222
@@ -253,3 +256,4 @@ if __name__ == "__main__":
     # ? If you are willing to use waitress-serve command, please add `/home/sadm/.local/bin` to your ~/.bashrc
     # from waitress import serve
     # serve(app, host="0.0.0.0", port=PORT)
+
