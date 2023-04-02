@@ -5,15 +5,36 @@ import json
 # ? flask - library used to write REST API endpoints (functions in simple words) to communicate with the client (view) application's interactions
 # ? request - is the default object used in the flask endpoints to get data from the requests
 # ? Response - is the default HTTP Response object, defining the format of the returned data by this api
-from flask import Flask, request, Response, render_template
+from flask import Flask, request, Response, render_template, url_for, flash, redirect, session
 # ? sqlalchemy is the main library we'll use here to interact with PostgresQL DBMS
 import sqlalchemy
 # ? Just a class to help while coding by suggesting methods etc. Can be totally removed if wanted, no change
 from typing import Dict
+# a class to help with password hashing before storing it in the database for security 
+# from werkzeug.security import generate_password_hash 
+
+
+"""
+    note:
+
+    CRUD operations have already been implemented by the TA.
+
+    We now need to create our own functions and write custom sql for them. 
+"""
+
+""" create a group
+    
+    def create_group():
+    
+    def gen_create_group_statement()-> str:
+        return statement
+"""
 
 
 # ? web-based applications written in flask are simply called apps are initialized in this format from the Flask base class. You may see the contents of `__name__` by hovering on it while debugging if you're curious
 app = Flask(__name__)
+app.secret_key = 'mysecretkey'
+app.debug = True
 
 # ? Just enabling the flask app to be able to communicate with any request source
 CORS(app)
@@ -29,6 +50,18 @@ engine = sqlalchemy.create_engine(
 # ? `db` - the database (connection) object will be used for executing queries on the connected database named `postgres` in our deployed Postgres DBMS
 db = engine.connect()
 
+with open('schema.sql', 'r') as s:
+    schema = s.read()
+    db.execute(sqlalchemy.text(schema))
+    db.commit()
+'''
+with open('triggers.sql', 'r') as f:
+    triggers = f.read()
+# executing triggers in the background
+    db.execute(sqlalchemy.text(triggers))
+    db.commit()
+''' 
+
 # ? A dictionary containing
 data_types = {
     'boolean': 'BOOL',
@@ -37,10 +70,82 @@ data_types = {
     'time': 'TIME',
 }
 
-# ? @app.get is called a decorator, from the Flask class, converting a simple python function to a REST API endpoint (function)
 @app.route("/")
 def index():
     return render_template("frontview.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "GET":
+        return render_template("login.html")
+    else:
+        input_email = request.form.get('email')
+        input_password = request.form.get('password')
+        # check if the input email even exists - if it does then check password if not then return error message and ask to sign up
+        statement = sqlalchemy.text("SELECT * FROM users WHERE email = :email")
+        params = {'email':input_email}
+        # returns as a tuple - can index into the tuple knowing the schema
+        res = db.execute(statement, params).fetchone()
+        if res == None:
+            # return error message and prompt to sign up
+            flash("Invalid e-mail/password: E-mail does not exist. Sign up now in the link below!", category='error')
+            return redirect(url_for('login'))
+        else:
+            # check the password as well
+            if input_password == res[3]:
+                # storing email to get info from database and name to welcome the person
+                session['email'] = res[2]
+                session['name'] = res[1]
+                flash('Login successful! Welcome.', category='success')
+                return redirect(url_for('home'))
+                
+                # log him in 
+            else: 
+                flash("Invalid e-mail/password: Wrong e-mail password combination. Try again.")
+                return redirect(url_for('login'))
+                
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    if request.method == "POST":
+        name = request.form.get('name')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        country = request.form.get('country')
+
+
+        try:
+            statement = sqlalchemy.text('INSERT INTO users (name, email, password, country) VALUES (:name, :email, :password, :country)')
+            params = {'name': name, 'email': email, 'password': password, 'country': country}
+            db.execute(statement, params)
+            db.commit()
+            flash('Registration was successful!', category='success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.rollback()
+            if "Email already" in str(e):
+                flash('Invalid e-mail: E-mail already in use.')
+                return redirect(url_for('register'))
+            elif "Password must" in str(e):
+                flash("Invalid password: Password must be at least 8 characters long and contain at least one uppercase and lowercase character")
+                return redirect(url_for('register'))
+    else:
+        return render_template("register.html")
+    
+
+@app.route('/home', methods=["GET", "POST"])
+def home():
+    if 'email' in session:
+        return render_template('home.html', name=session['name'])
+    else:
+        return redirect(url_for('login'))
+    
+@app.route('/logout', methods=["POST", "GET"])
+def logout():
+    session.clear()
+    return render_template('frontview.html')
+
+# ? @app.get is called a decorator, from the Flask class, converting a simple python function to a REST API endpoint (function)
 
 '''
 @app.get("/table")
@@ -241,10 +346,21 @@ def generate_create_table_statement(table: Dict):
     statement = statement[:-1] + ");"
     return sqlalchemy.text(statement)
 
+"""
+    Matt's Note:
+
+    Maybe can modify the above function so that the primary key is whatever we need it to be. Maybe make it known that
+    the first entry will always be the primary key?
+
+    this way there is no way to get composite keys. 
+"""
+'''
+
+
 # ? This method can be used by waitress-serve CLI 
 def create_app():
    return app
-'''
+
 # ? The port where the debuggable DB management API is served
 PORT = 4173
 # ? Running the flask app on the localhost/0.0.0.0, port 2222

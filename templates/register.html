@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+
+{% block body %}
+<!-- one block form to enter email -->
+<form method="POST">
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-danger">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="form-group" style="width: 500px; margin: auto; padding-top: 100px;">
+        <h3 align="center"> Sign Up </h3>
+        <label for="name"> My name is </label>
+        <input
+            type="name"
+            class="form-control"
+            id="name"
+            name="name"
+            placeholder="Enter your name"
+        />      
+    </div>   
+    
+    <div class="form-group" style="width: 500px; margin: auto; padding-top: 20px;">
+        
+        <label for="email"> Here's my email address:</label>
+        <input
+            type="email"
+            class="form-control"
+            id="email"
+            name="email"
+            placeholder="Enter your email address"
+        />
+    </div>
+
+    <div class="form-group" style="width: 500px; margin: auto; padding-top: 20px;">
+        <label for="password"> And here's my password:</label>
+        <input
+            type="password"
+            class="form-control"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+        />      
+    </div>   
+
+    <div class="form-group" style="width: 500px; margin: auto; padding-top: 20px;">
+        <label for="country"> I am from </label>
+        <input
+            type="country"
+            class="form-control"
+            id="country"
+            name="country"
+            placeholder="Enter your country"
+        />      
+        <p></p>
+        <button type="submit" class="btn btn-success" style="display: block; margin-block-start: auto;">Sign me up!</button>
+        <p></p>
+        Already have an account?&nbsp;<a href="{{ url_for('login') }}">Login here!</a>
+    </div>   
+
+    <div style="width: 500px; margin: auto; padding-top: 20px;">
+        
+    </div>
+
+    
+
+    
+    
+</form>
+{% endblock %}

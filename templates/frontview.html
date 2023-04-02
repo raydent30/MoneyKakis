@@ -1,11 +1,21 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <title> hello world </title>
-    </head>
-    <body>
-        IT2002 PROJECT
-    </body>
-</html>
+{% extends "layout.html" %}
+{% block title %} MoneyKakis|Welcome {% endblock %}
+{% block body %}
 
+<div style = "position:absolute; left: 25px; top:10px;">
+    <h1>MoneyKakis</h1>
+</div>
 
+<div style = "position:absolute; right: 125px; top: 17px;">
+    <form action="/login" method="get">
+        <button type="submit" class="btn btn-info">Log In</button>
+    </form>
+</div>
+
+<div style = "position:absolute; right: 25px; top: 17px;">
+    <form action="/register" method="get">
+        <button type="submit" class="btn btn-info">Sign Up</button>
+    </form>
+</div>
+
+{% endblock %}
