@@ -96,6 +96,7 @@ def login():
                 # storing email to get info from database and name to welcome the person
                 session['email'] = res[2]
                 session['name'] = res[1]
+                session['id'] = res[0]
                 flash('Login successful! Welcome.', category='success')
                 return redirect(url_for('home'))
                 
@@ -139,6 +140,41 @@ def home():
         return render_template('home.html', name=session['name'])
     else:
         return redirect(url_for('login'))
+    
+@app.route('/managegroups', methods=["GET", "POST"])
+def managegroups():
+    if request.method == "GET":
+        print(session)
+        return render_template('managegroups.html')
+    else:
+        group_ID = request.form.get('groupID')
+        passcode = request.form.get('passcode')
+        # Check to make sure group ID exists and passcode matches
+        statement1 = sqlalchemy.text("SELECT * FROM groups WHERE id = :id")
+        params = {'id': group_ID}
+        res = db.execute(statement1, params).fetchone()
+        print(res)
+        if res == None:
+            # The group ID entered does not exist
+            flash("Error: group ID entered does not exist", category='error')
+            return redirect(url_for("managegroups"))
+        else:
+            # Check to ensure passcode is correct
+            if passcode == res[2]:
+                # Passcode is correct - add the current user to the group
+                # Do I need try...except here??
+                statement2 = sqlalchemy.text("INSERT INTO group_members (user_id, group_id) VALUES (:user_id, :group_id)")
+                params = {"user_id": session["id"], "group_id": group_ID}
+                db.execute(statement2, params)
+                db.commit()
+                flash("Successfully joined group!", category="success")
+                return redirect(url_for("managegroups"))
+            else:
+                flash("Error: group ID and passcode do not match. Please try again.")
+                return redirect(url_for("managegroups"))
+
+
+
     
 @app.route('/logout', methods=["POST", "GET"])
 def logout():
