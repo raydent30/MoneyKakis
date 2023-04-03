@@ -156,7 +156,6 @@ def joingroup():
                                 WHERE id = :id")
     params = {"id": group_ID}
     res = db.execute(statement, params).fetchone()
-    print(res)
     # Check to ensure the group ID entered exists
     if res == None:
         # The group ID entered does not exist
