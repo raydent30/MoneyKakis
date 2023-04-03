@@ -141,53 +141,76 @@ def home():
     else:
         return redirect(url_for('login'))
     
-@app.route('/managegroups', methods=["GET", "POST"])
+@app.get("/managegroups")
 def managegroups():
-    if request.method == "GET":
-        print(session)
-        return render_template('managegroups.html')
+    return render_template("managegroups.html")
+
+# Called when the Join Group form is submitted
+@app.post("/joingroup")
+def joingroup():
+    group_ID = request.form.get("groupID")
+    passcode = request.form.get("passcode")
+    # Check to make sure group ID exists and passcode matches
+    statement = sqlalchemy.text("SELECT * \
+                                FROM groups \
+                                WHERE id = :id")
+    params = {"id": group_ID}
+    res = db.execute(statement, params).fetchone()
+    print(res)
+    # Check to ensure the group ID entered exists
+    if res == None:
+        # The group ID entered does not exist
+        flash("Error: group ID entered does not exist", category='error')
+    else:   # Group ID exists
+        # Check to ensure passcode is correct
+        if passcode == res[2]:
+            # Passcode is correct - now check to make sure the user has not already joined this group
+            statement = sqlalchemy.text("SELECT * \
+                                        FROM group_members \
+                                        WHERE user_id = :user_id \
+                                        AND group_id = :group_id")
+            params = {"user_id": session["id"], "group_id": group_ID}
+            if db.execute(statement, params).fetchone() == None:
+                # The user has not yet joined this group
+                try:
+                    statement = sqlalchemy.text("INSERT INTO group_members (user_id, group_id) VALUES (:user_id, :group_id)")
+                    params = {"user_id": session["id"], "group_id": group_ID}
+                    db.execute(statement, params)
+                    db.commit()
+                    flash("Successfully joined group!", category="success")
+                except Exception as e:
+                    db.rollback()
+                    flash("There was an error when attempting to join group.", category="error")
+            else:   # The user has already joined this group
+                flash("Error: you have already joined this group.")
+        else:   # Passcode is incorrect
+            flash("Error: group ID and passcode do not match. Please try again.")
+    return redirect(url_for("managegroups"))
+
+# Called when the create group form is submitted
+@app.post("/creategroup")
+def creategroup():
+    group_name = request.form.get("groupname")
+    passcode = request.form.get("passcode")
+    # Create the group and add the user to it.
+    try:
+        # Return the id of the group created so we can add the user to it if the group is created successfully.
+        # Group creation and member addition should both be part of the same transaction - either both occur or neither occur.
+        statement = sqlalchemy.text("INSERT INTO groups (name, passcode) VALUES (:groupname, :passcode) RETURNING id")
+        params = {"groupname": group_name, "passcode": passcode}
+        group_id = db.execute(statement, params).fetchone()[0]
+        statement = sqlalchemy.text("INSERT INTO group_members (user_id, group_id) VALUES (:userid, :groupid)")
+        params = {"userid": session["id"], "groupid": group_id}
+        db.execute(statement, params)
+    except Exception:
+        db.rollback()
+        flash("An error occurred. Group not created.", category="error")
     else:
-        group_ID = request.form.get('groupID')
-        passcode = request.form.get('passcode')
-        # Check to make sure group ID exists and passcode matches
-        statement = sqlalchemy.text("SELECT * \
-                                     FROM groups \
-                                     WHERE id = :id")
-        params = {"id": group_ID}
-        res = db.execute(statement, params).fetchone()
-        print(res)
-        # Check to ensure the group ID entered exists
-        if res == None:
-            # The group ID entered does not exist
-            flash("Error: group ID entered does not exist", category='error')
-            return redirect(url_for("managegroups"))
-        else:   # Group ID exists
-            # Check to ensure passcode is correct
-            if passcode == res[2]:
-                # Passcode is correct - now check to make sure the user has not already joined this group
-                statement = sqlalchemy.text("SELECT * \
-                                             FROM group_members \
-                                             WHERE user_id = :user_id \
-                                             AND group_id = :group_id")
-                params = {"user_id": session["id"], "group_id": group_ID}
-                if db.execute(statement, params).fetchone() == None:
-                    # The user has not yet joined this group
-                    try:
-                        statement = sqlalchemy.text("INSERT INTO group_members (user_id, group_id) VALUES (:user_id, :group_id)")
-                        params = {"user_id": session["id"], "group_id": group_ID}
-                        db.execute(statement, params)
-                        db.commit()
-                        flash("Successfully joined group!", category="success")
-                    except Exception as e:
-                        db.rollback()
-                        flash("There was an error when attempting to join group.")
-                else:   # The user has already joined this group
-                    flash("Error: you have already joined this group.")
-            else:   # Passcode is incorrect
-                flash("Error: group ID and passcode do not match. Please try again.")
-            return redirect(url_for("managegroups"))
-
-
+        # Both statements were executed successfully. We now commit the transaction to the database.
+        db.commit()
+        # Tell the user what their group ID is. The user can then share this ID with their friends in order for them to be able to join the group.
+        flash(f"Group created successfully! Your group ID is: {group_id}. \nPlease save this number and share it, along with your passcode, to anyone who you invite to join your group.", category="success")
+    return redirect(url_for("managegroups"))
 
     
 @app.route('/logout', methods=["POST", "GET"])
