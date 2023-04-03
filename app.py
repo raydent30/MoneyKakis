@@ -150,28 +150,42 @@ def managegroups():
         group_ID = request.form.get('groupID')
         passcode = request.form.get('passcode')
         # Check to make sure group ID exists and passcode matches
-        statement1 = sqlalchemy.text("SELECT * FROM groups WHERE id = :id")
-        params = {'id': group_ID}
-        res = db.execute(statement1, params).fetchone()
+        statement = sqlalchemy.text("SELECT * \
+                                     FROM groups \
+                                     WHERE id = :id")
+        params = {"id": group_ID}
+        res = db.execute(statement, params).fetchone()
         print(res)
+        # Check to ensure the group ID entered exists
         if res == None:
             # The group ID entered does not exist
             flash("Error: group ID entered does not exist", category='error')
             return redirect(url_for("managegroups"))
-        else:
+        else:   # Group ID exists
             # Check to ensure passcode is correct
             if passcode == res[2]:
-                # Passcode is correct - add the current user to the group
-                # Do I need try...except here??
-                statement2 = sqlalchemy.text("INSERT INTO group_members (user_id, group_id) VALUES (:user_id, :group_id)")
+                # Passcode is correct - now check to make sure the user has not already joined this group
+                statement = sqlalchemy.text("SELECT * \
+                                             FROM group_members \
+                                             WHERE user_id = :user_id \
+                                             AND group_id = :group_id")
                 params = {"user_id": session["id"], "group_id": group_ID}
-                db.execute(statement2, params)
-                db.commit()
-                flash("Successfully joined group!", category="success")
-                return redirect(url_for("managegroups"))
-            else:
+                if db.execute(statement, params).fetchone() == None:
+                    # The user has not yet joined this group
+                    try:
+                        statement = sqlalchemy.text("INSERT INTO group_members (user_id, group_id) VALUES (:user_id, :group_id)")
+                        params = {"user_id": session["id"], "group_id": group_ID}
+                        db.execute(statement, params)
+                        db.commit()
+                        flash("Successfully joined group!", category="success")
+                    except Exception as e:
+                        db.rollback()
+                        flash("There was an error when attempting to join group.")
+                else:   # The user has already joined this group
+                    flash("Error: you have already joined this group.")
+            else:   # Passcode is incorrect
                 flash("Error: group ID and passcode do not match. Please try again.")
-                return redirect(url_for("managegroups"))
+            return redirect(url_for("managegroups"))
 
 
 
