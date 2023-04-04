@@ -157,7 +157,7 @@ def admin_home():
     if request.method == 'POST':
         ###### "Data Analytics" queries here ######
         if request.form['action'] == 'Query':
-            conn = psycopg2.connect(dbname='test', user='postgres', password='140483', host='localhost')
+            conn = psycopg2.connect(dbname='postgres', user='postgres', password='postgres', host='localhost')
 
             # Create a cursor object
             cur = conn.cursor()
@@ -186,7 +186,7 @@ def admin_home():
             conn.close()
 
             # Render the template with the query result
-            return render_template('adminHome.html', headers=headers, result=result)
+            return render_template('admin_pages/adminHome.html', headers=headers, result=result)
         ###### "Data Analytics" queries here ######
         else:
             group_or_user = request.form.get('group_or_user')
@@ -201,7 +201,7 @@ def admin_home():
             elif (group_or_user=="user" and add_or_delete=="delete"):
                 return redirect(url_for('admin_user_delete'))
 
-    return render_template('adminHome.html', headers=headers, result=result)
+    return render_template('admin_pages/adminHome.html', headers=headers, result=result)
 
 @app.route('/admin_group_add', methods=['GET', 'POST'])
 def admin_group_add():
@@ -210,7 +210,7 @@ def admin_group_add():
         passcode = request.form.get('passcode')
 
         try:
-            conn = psycopg2.connect(dbname='test', user='postgres', password='140483', host='localhost')
+            conn = psycopg2.connect(dbname='postgres', user='postgres', password='postgres', host='localhost')
             cur = conn.cursor()
 
             cur.execute("INSERT INTO groups (name, passcode) VALUES (%s, %s)", (name, passcode))
@@ -227,7 +227,7 @@ def admin_group_add():
                 flash("Invalid password: Password must be at least 8 characters long and contain at least one uppercase and lowercase character")
                 return redirect(url_for('admin_group_add'))
 
-    return render_template('adminGroupAdd.html')
+    return render_template('admin_pages/adminGroupAdd.html')
 
 @app.route('/admin_group_delete', methods=['GET', 'POST'])
 def admin_group_delete():
@@ -235,7 +235,7 @@ def admin_group_delete():
         id = request.form.get('id')
 
         try:
-            conn = psycopg2.connect(dbname='test', user='postgres', password='140483', host='localhost')
+            conn = psycopg2.connect(dbname='postgres', user='postgres', password='postgres', host='localhost')
             cur = conn.cursor()
 
             cur.execute("DELETE FROM group_members WHERE group_id = %s", (id,))
@@ -251,7 +251,7 @@ def admin_group_delete():
             db.rollback()
             flash("Please enter a valid group ID.")
             return redirect(url_for('admin_group_delete'))
-    return render_template('adminGroupDelete.html')
+    return render_template('admin_pages/adminGroupDelete.html')
 
 @app.route('/admin_user_add', methods=['GET', 'POST'])
 def admin_user_add():
@@ -260,7 +260,7 @@ def admin_user_add():
         groupID = request.form.get('groupid')
 
         try:
-            conn = psycopg2.connect(dbname='test', user='postgres', password='140483', host='localhost')
+            conn = psycopg2.connect(dbname='postgres', user='postgres', password='postgres', host='localhost')
             cur = conn.cursor()
 
             cur.execute("INSERT INTO group_members (user_id, group_id) VALUES (%s, %s)", (userID, groupID))
@@ -276,7 +276,7 @@ def admin_user_add():
             flash("Please enter valid user and group IDs")
             return redirect(url_for('admin_user_add'))
 
-    return render_template('adminUserAdd.html')
+    return render_template('admin_pages/adminUserAdd.html')
 
 @app.route('/admin_user_delete', methods=['GET', 'POST'])
 def admin_user_delete():
@@ -285,7 +285,7 @@ def admin_user_delete():
         groupID = request.form.get('groupid')
 
         try:
-            conn = psycopg2.connect(dbname='test', user='postgres', password='140483', host='localhost')
+            conn = psycopg2.connect(dbname='postgres', user='postgres', password='postgres', host='localhost')
             cur = conn.cursor()
 
             cur.execute("DELETE FROM group_members WHERE user_id = %s AND group_id = %s", (userID, groupID))
@@ -301,7 +301,7 @@ def admin_user_delete():
             flash("Please enter valid user and group IDs")
             return redirect(url_for('admin_user_delete'))
 
-    return render_template('adminUserDelete.html')
+    return render_template('admin_pages/adminUserDelete.html')
 
 ########################################## ADMIN CODE ENDS HERE ##########################################
 
