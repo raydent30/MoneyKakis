@@ -8,6 +8,7 @@ import json
 from flask import Flask, request, Response, render_template, url_for, flash, redirect, session
 # ? sqlalchemy is the main library we'll use here to interact with PostgresQL DBMS
 import sqlalchemy
+import psycopg2
 # ? Just a class to help while coding by suggesting methods etc. Can be totally removed if wanted, no change
 from typing import Dict
 # a class to help with password hashing before storing it in the database for security 
@@ -74,6 +75,8 @@ data_types = {
 def index():
     return render_template("frontview.html")
 
+ADMIN_MAIL = "admin@adminmail.com"
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "GET":
@@ -97,15 +100,22 @@ def login():
                 session['email'] = res[2]
                 session['name'] = res[1]
                 session['id'] = res[0]
+
+
+                # Check if admin
+
+                if input_email == ADMIN_MAIL:
+                    return redirect(url_for('admin_home'))
+
                 flash('Login successful! Welcome.', category='success')
-                return redirect(url_for('home'))
+                
+                return redirect(url_for('userguide'))
                 
                 # log him in 
             else: 
                 flash("Invalid e-mail/password: Wrong e-mail password combination. Try again.")
                 return redirect(url_for('login'))
                 
-
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -132,14 +142,231 @@ def register():
                 return redirect(url_for('register'))
     else:
         return render_template("register.html")
-    
 
-@app.route('/home', methods=["GET", "POST"])
+@app.get('/userguide')
+def userguide():
+    return render_template("userguide.html")
+
+########################################## ADMIN CODE BEGINS HERE ##########################################
+
+@app.route('/admin_home', methods=['GET', 'POST'])
+def admin_home():
+    result = None
+    headers = None
+
+    if request.method == 'POST':
+        ###### "Data Analytics" queries here ######
+        if request.form['action'] == 'Query':
+            conn = psycopg2.connect(dbname='test', user='postgres', password='140483', host='localhost')
+
+            # Create a cursor object
+            cur = conn.cursor()
+
+            # Get the selected query type from the form
+            query_type = request.form.get('query_type')
+
+            # Perform the selected query
+            if query_type == 'list_users':
+                cur.execute('SELECT * FROM users')
+                headers = [desc[0] for desc in cur.description] 
+                result = cur.fetchall()
+            elif query_type == 'list_groups':
+                cur.execute('SELECT * FROM groups')
+                headers = [desc[0] for desc in cur.description] 
+                result = cur.fetchall()
+            elif query_type == 'list_group_members':
+                cur.execute('SELECT * FROM group_members')
+                headers = [desc[0] for desc in cur.description] 
+                result = cur.fetchall()
+            else:
+                result = None
+
+            # Close the cursor and connection
+            cur.close()
+            conn.close()
+
+            # Render the template with the query result
+            return render_template('adminHome.html', headers=headers, result=result)
+        ###### "Data Analytics" queries here ######
+        else:
+            group_or_user = request.form.get('group_or_user')
+            add_or_delete = request.form.get('add_or_delete')
+
+            if (group_or_user=="group" and add_or_delete=="add"):
+                return redirect(url_for('admin_group_add'))
+            elif (group_or_user=="group" and add_or_delete=="delete"):
+                return redirect(url_for('admin_group_delete'))
+            elif (group_or_user=="user" and add_or_delete=="add"):
+                return redirect(url_for('admin_user_add'))
+            elif (group_or_user=="user" and add_or_delete=="delete"):
+                return redirect(url_for('admin_user_delete'))
+
+    return render_template('adminHome.html', headers=headers, result=result)
+
+@app.route('/admin_group_add', methods=['GET', 'POST'])
+def admin_group_add():
+    if request.method == "POST":
+        name = request.form.get('name')
+        passcode = request.form.get('passcode')
+
+        try:
+            conn = psycopg2.connect(dbname='test', user='postgres', password='140483', host='localhost')
+            cur = conn.cursor()
+
+            cur.execute("INSERT INTO groups (name, passcode) VALUES (%s, %s)", (name, passcode))
+            conn.commit()
+
+            cur.close()
+            conn.close()
+            
+            flash('Registration was successful!', category='success')
+            return redirect(url_for('admin_group_add'))
+        except Exception as e:
+            db.rollback()
+            if "Password must" in str(e):
+                flash("Invalid password: Password must be at least 8 characters long and contain at least one uppercase and lowercase character")
+                return redirect(url_for('admin_group_add'))
+
+    return render_template('adminGroupAdd.html')
+
+@app.route('/admin_group_delete', methods=['GET', 'POST'])
+def admin_group_delete():
+    if request.method == "POST":
+        id = request.form.get('id')
+
+        try:
+            conn = psycopg2.connect(dbname='test', user='postgres', password='140483', host='localhost')
+            cur = conn.cursor()
+
+            cur.execute("DELETE FROM group_members WHERE group_id = %s", (id,))
+            cur.execute("DELETE FROM groups WHERE id = %s", (id,))
+            conn.commit()
+
+            cur.close()
+            conn.close()
+            
+            flash('Deletion was successful!', category='success')
+            return redirect(url_for('admin_group_delete'))
+        except Exception as e:
+            db.rollback()
+            flash("Please enter a valid group ID.")
+            return redirect(url_for('admin_group_delete'))
+    return render_template('adminGroupDelete.html')
+
+@app.route('/admin_user_add', methods=['GET', 'POST'])
+def admin_user_add():
+    if request.method == "POST":
+        userID = request.form.get('userid')
+        groupID = request.form.get('groupid')
+
+        try:
+            conn = psycopg2.connect(dbname='test', user='postgres', password='140483', host='localhost')
+            cur = conn.cursor()
+
+            cur.execute("INSERT INTO group_members (user_id, group_id) VALUES (%s, %s)", (userID, groupID))
+            conn.commit()
+
+            cur.close()
+            conn.close()
+            
+            flash('Added user to group!', category='success')
+            return redirect(url_for('admin_user_add'))
+        except Exception as e:
+            db.rollback()
+            flash("Please enter valid user and group IDs")
+            return redirect(url_for('admin_user_add'))
+
+    return render_template('adminUserAdd.html')
+
+@app.route('/admin_user_delete', methods=['GET', 'POST'])
+def admin_user_delete():
+    if request.method == "POST":
+        userID = request.form.get('userid')
+        groupID = request.form.get('groupid')
+
+        try:
+            conn = psycopg2.connect(dbname='test', user='postgres', password='140483', host='localhost')
+            cur = conn.cursor()
+
+            cur.execute("DELETE FROM group_members WHERE user_id = %s AND group_id = %s", (userID, groupID))
+            conn.commit()
+
+            cur.close()
+            conn.close()
+            
+            flash('Deleted user from group!', category='success')
+            return redirect(url_for('admin_user_delete'))
+        except Exception as e:
+            db.rollback()
+            flash("Please enter valid user and group IDs")
+            return redirect(url_for('admin_user_delete'))
+
+    return render_template('adminUserDelete.html')
+
+########################################## ADMIN CODE ENDS HERE ##########################################
+
+
+
+"""
+dashboard logic:
+    for the user:
+        get a list of all groups they are in [-> list]
+    end for
+    
+    for group in that list:
+        find all those who owe you money, print that amount
+        find all those who you owe money, print that amount
+    end for
+
+SQL - Equivalent
+
+SELECT g.name, g.id, FROM group_members gm, groups g WHERE gm.group
+
+"""
+
+@app.route('/groupexpenses/<gid>', methods=["GET", "POST"])
+def groupexpenses(gid):
+    if request.method == "GET":
+        # query through the group_id to get all the expenses
+        query = sqlalchemy.text("SELECT E.name, E.user_id, u1.name, E.amount \
+                                FROM expenses E, users u1 \
+                                WHERE E.id IN (SELECT e.id FROM expenses e, group_members gm, users u WHERE e.group_id = :group_id AND u.id = e.user_id GROUP BY e.id) \
+                                AND E.user_id = u1.id")
+        params = {"group_id": gid}
+        expenses_data = db.execute(query, params).fetchall()
+        print(len(expenses_data))
+        query_for_grpmembers = sqlalchemy.text('SELECT COUNT(gm.user_id)\
+                                                FROM group_members gm WHERE\
+                                                gm.group_id = :groupid \
+                                                ;') 
+        query_for_names = sqlalchemy.text('SELECT u.id, u.name \
+                                           FROM users u \
+                                            WHERE u.id IN (SELECT gm.user_id \
+                                            FROM groups g, group_members gm \
+                                            WHERE g.id = :grpid AND \
+                                            gm.group_id = :grpid) AND u.id \
+                                            NOT IN (SELECT e.user_id \
+                                            FROM expenses e \
+                                            WHERE e.group_id = :grpid);')
+        params_names = {"grpid": gid}
+        data_fornames = db.execute(query_for_names, params_names).fetchall()
+        params_no = {"groupid": gid}
+        totalnoOfmembers = db.execute(query_for_grpmembers, params_no).fetchone()
+        
+        return render_template('groupexpenses.html', data=expenses_data, number=totalnoOfmembers, names=data_fornames)
+
+
+@app.route("/home", methods=["GET", "POST"])
 def home():
     if 'email' in session:
-        return render_template('home.html', name=session['name'])
-    else:
-        return redirect(url_for('login'))
+        statement = sqlalchemy.text("SELECT g.name, g.id \
+                                FROM group_members gm, groups g \
+                                WHERE gm.group_id = g.id \
+                                AND gm.user_id = :userid")
+        params = {"userid": session["id"]}
+        group_data = db.execute(statement, params).fetchall()
+        return render_template("home.html", name=session["name"], group_data=group_data)
+    return redirect(url_for("login"))
     
 @app.get("/managegroups")
 def managegroups():

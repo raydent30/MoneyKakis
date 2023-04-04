@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+
+{% block body %}
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-{{ category }}">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+{% include 'navbar.html' %}
+
+<div style="width: 500px; margin: auto; padding-top: 50px;">
+
+    <h3 align="center">User Guide</h3>
+
+    <p>
+        MoneyKakis is a bill-spliting app that makes it easy for your and your friends to track shared expenses. To get
+        started, head to the "manage groups" tab and join an existing group or create a new one — you'll need to know
+        your group's passcode, or you'll need to create one, depending on whether you're joining or creating a group.
+        Note that there are no restrictions on the number of groups you can join or create, or on how many members any
+        group can have. Once you have joined at least one group, your dashboard will list all groups of which you are a
+        member. From your dashboard you can access information about each of your groups, including a list of members
+        and a log of all expenses, which includes information about the person who paid for each expense and how much
+        money you owe or are owed as a result of it. To add expenses, simply click the "add expense" button corresponding
+        to the group you wish to add the expense to and fill out the necessary details. You and your group mates' dashboards
+        will be updated to reflect the addition of the new expense.
+    </p>
+</div>
+
+{% endblock body %}

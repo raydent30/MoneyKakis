@@ -1,0 +1,43 @@
+<style>
+    .navbar {
+        position: fixed;
+        top: 0;
+        width: 100%;
+    }
+</style>
+This will make the navbar fixed at the top of the page, with a width of 100%. You can add this code either in the head
+section of your HTML document or in a separate CSS file.
+
+So the updated HTML code with the CSS code would look like this:
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <a class="navbar-brand">MoneyKakis</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+        <ul class="navbar-nav">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false">
+                    {{ session['name'] }}
+                </a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>
+<style>
+    .navbar {
+        position: fixed;
+        top: 0;
+        width: 100%;
+    }
+
+    .nav-item.dropdown:hover .dropdown-menu {
+        display: block;
+    }
+</style>

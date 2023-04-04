@@ -13,5 +13,20 @@
 {% endwith %}
 
 {% include 'navbar.html' %}
-  
+<div class="container">
+    <h1>Welcome, {{ name }}!</h1>
+    <hr>
+    <h2>Your Groups</h2>
+    {% if group_data %}
+        {% for group in group_data %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ group.name }} #{{ group.id }}</h5>
+                    <a href="{{ url_for('groupexpenses', gid=group.id) }}" class="btn btn-primary">View Expenses</a>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+    <a href="{{ url_for('managegroups') }}" class="btn btn-success">Create/Join Group</a>
+</div>
 {% endblock %}

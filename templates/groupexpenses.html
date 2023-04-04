@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+
+{% block body %}
+{% include "navbar.html" %}
+
+{% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="alert alert-{{ category }}">
+                {% for message in messages %}
+                    <p>{{ message }}</p>
+                {% endfor %}
+            </div>
+        {% endif %}
+{% endwith %}
+
+<div class="container">
+    <h1>Group Name</h1>
+    <hr>
+    <h2>Expenses</h2>
+    <table class="table">
+        <thead class="thead-light">
+            <tr>
+                <th scope="col">Bill Type</th>
+                <th scope="col">Paid By</th>
+                <th scope="col">Total Amount</th>
+                <th scope="col">Payee</th>
+                <th scope="col">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if data %}
+                {% for expense in data %}
+                    {% if expense[1] == session['id'] %}
+                        <tr>
+                            <td>{{ expense[0] }}</td>
+                            <td>You</td>
+                            <td>{{ expense[3] }}</td>
+                            <td>
+                                {% for n in names %}
+                                    n[1] owes you: $
+                                {% endfor %}
+                            </td>
+                            <td>{{ (expense[3]*(number[0]-1)/number[0])|round(2) }}</td>
+                        </tr>
+                    {% endif %}
+                    {% if expense[1] != session['id'] %}
+                        <tr>
+                            <td>{{ expense[0] }}</td>
+                            <td>{{ expense[2] }}</td>
+                            <td>{{ expense[3] }}</td>
+                            <td>You owe: $</td>
+                            <td>{{ (expense[3]/number[0])|round(2) }}</td>
+                        </tr>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            {% if not data %}
+            <tr>
+                <h3>No outstanding expenses</h3>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+{% endblock %}

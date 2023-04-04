@@ -1,0 +1,31 @@
+{% extends "admin_pages/base.html" %}
+{% block content %}
+
+{% include 'admin_pages/adminNavbar.html' %}
+<div class="jumbotron">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div>
+        {{ messages[0] }}</a>
+    </div>
+    {% endif %}
+    {% endwith %}
+    <form action="/admin_group_delete" method="post">
+        <div class="form-group" style="width: 500px; margin: auto; padding-top: 100px;">
+            <h3 align="center"> Delete Group </h3>
+            <label for="id"> ID of Group: </label>
+            <input type="id" class="form-control" id="id" name="id" placeholder="Enter ID of group to be deleted"
+                required />
+            <p></p>
+            <button type="submit" class="btn btn-success" style="display: block; margin-block-start: auto;">Delete
+                Group</button>
+            <p></p>
+        </div>
+        <div style="width: 500px; margin: auto; padding-top: 20px;">
+            <a href="{{ url_for('admin_home') }}">Back to Admin Home</a>
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}

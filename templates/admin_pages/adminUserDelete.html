@@ -1,0 +1,36 @@
+{% extends "admin_pages/base.html" %}
+{% block content %}
+
+{% include 'admin_pages/adminNavbar.html' %}
+<div class="jumbotron">
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+    <div>
+        {{ messages[0] }}</a>
+    </div>
+    {% endif %}
+    {% endwith %}
+    <form action="/admin_user_delete" method="post">
+        <div class="form-group" style="width: 500px; margin: auto; padding-top: 100px;">
+            <h3 align="center"> Remove User to Group </h3>
+            <label for="userid"> ID of User: </label>
+            <input type="userid" class="form-control" id="userid" name="userid" placeholder="Enter user ID" required />
+        </div>
+
+        <div class="form-group" style="width: 500px; margin: auto; padding-top: 20px;">
+            <label for="groupid"> Group to leave:</label>
+            <input type="groupid" class="form-control" id="groupid" name="groupid" placeholder="Enter group ID"
+                required />
+            <p></p>
+            <button type="submit" class="btn btn-success"
+                style="display: block; margin-block-start: auto;">Remove</button>
+            <p></p>
+        </div>
+        <div style="width: 500px; margin: auto; padding-top: 20px;">
+            <a href="{{ url_for('admin_home') }}">Back to Admin Home</a>
+        </div>
+
+    </form>
+
+</div>
+{% endblock %}
