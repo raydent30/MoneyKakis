@@ -178,6 +178,15 @@ def admin_home():
                 cur.execute('SELECT * FROM group_members')
                 headers = [desc[0] for desc in cur.description] 
                 result = cur.fetchall()
+            elif query_type == 'show_empty_groups':
+                cur.execute('SELECT * \
+                            FROM groups g \
+                            WHERE NOT EXISTS ( \
+	                            SELECT * \
+	                            FROM group_members gm \
+	                            WHERE g.id = gm.group_id)')
+                headers = [desc[0] for desc in cur.description]
+                result = cur.fetchall()
             else:
                 result = None
 
