@@ -187,6 +187,15 @@ def admin_home():
 	                            WHERE g.id = gm.group_id)')
                 headers = [desc[0] for desc in cur.description]
                 result = cur.fetchall()
+            elif query_type == 'show_big_spenders':
+                cur.execute("SELECT u.email, temp.average_spend \
+                            FROM (SELECT e.user_id, AVG(e.amount) AS average_spend \
+	                            FROM expenses e \
+	                            GROUP BY e.user_id \
+	                            HAVING AVG(e.amount) >= 100) temp, users u \
+                            WHERE temp.user_id = u.id")
+                headers = [desc[0] for desc in cur.description]
+                result = cur.fetchall()
             else:
                 result = None
 
