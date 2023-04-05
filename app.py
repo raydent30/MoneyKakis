@@ -326,9 +326,10 @@ SELECT g.name, g.id, FROM group_members gm, groups g WHERE gm.group
 
 @app.route('/groupexpenses/<gid>', methods=["GET", "POST"])
 def groupexpenses(gid):
+    session["groupid"] = gid
     if request.method == "GET":
         # query through the group_id to get all the expenses
-        query = sqlalchemy.text("SELECT E.name, E.user_id, u1.name, E.amount \
+        query = sqlalchemy.text("SELECT E.name, E.user_id, u1.name, E.amount, E.id\
                                 FROM expenses E, users u1 \
                                 WHERE E.id IN (SELECT e.id FROM expenses e, group_members gm, users u WHERE e.group_id = :group_id AND u.id = e.user_id GROUP BY e.id) \
                                 AND E.user_id = u1.id")
@@ -345,15 +346,18 @@ def groupexpenses(gid):
                                             FROM groups g, group_members gm \
                                             WHERE g.id = :grpid AND \
                                             gm.group_id = :grpid) AND u.id \
-                                            NOT IN (SELECT e.user_id \
-                                            FROM expenses e \
-                                            WHERE e.group_id = :grpid);')
-        params_names = {"grpid": gid}
+                                            <> :id;') # nested query !!
+        params_names = {"grpid": gid, "id":session["id"]}
         data_fornames = db.execute(query_for_names, params_names).fetchall()
         params_no = {"groupid": gid}
         totalnoOfmembers = db.execute(query_for_grpmembers, params_no).fetchone()
+
+        query_groupname = sqlalchemy.text('SELECT g.name FROM groups g WHERE g.id = :groupID;')
+        params_grpname = {"groupID": gid}
+        get_groupname = db.execute(query_groupname, params_grpname).fetchone()
+
         
-        return render_template('groupexpenses.html', data=expenses_data, number=totalnoOfmembers, names=data_fornames)
+        return render_template('groupexpenses.html', data=expenses_data, number=totalnoOfmembers, names=data_fornames, groupname=get_groupname)
 
 
 @app.route("/home", methods=["GET", "POST"])
@@ -437,6 +441,34 @@ def creategroup():
         # Tell the user what their group ID is. The user can then share this ID with their friends in order for them to be able to join the group.
         flash(f"Group created successfully! Your group ID is: {group_id}. \nPlease save this number and share it, along with your passcode, to anyone who you invite to join your group.", category="success")
     return redirect(url_for("managegroups"))
+
+@app.route('/addexpenses', methods=["POST"])
+def addexpense():
+    type = request.form.get('name')
+    g_id = session["groupid"]
+    amount = request.form.get('amount')
+    u_id = session["id"]
+    try:
+        insertion_query = sqlalchemy.text('INSERT INTO expenses(name, user_id, group_id, amount) VALUES (:type, :userid, :groupid, :amount);')
+        params = {"type": type, "userid":u_id, "groupid":g_id, "amount":amount}
+        db.execute(insertion_query,params)
+        db.commit()
+        flash('Expense added successfully', category='success')
+        return redirect(url_for('groupexpenses', gid=g_id))
+    except Exception:
+        db.rollback()
+        flash('Amount entered is invalid: make sure amount is greater than $0 and key in 2 decimal places (i.e 30.00)', category='error')
+        return redirect(url_for('groupexpenses', gid=g_id))
+    
+@app.route('/settleup', methods=["POST"])
+def settleup():
+    expense_id = request.form.get('expenseid')
+    print(expense_id)
+    query_delete = sqlalchemy.text('DELETE FROM expenses e WHERE e.id = :eid;')
+    params = {"eid":expense_id}
+    db.execute(query_delete, params)
+    db.commit()
+    return redirect(url_for('groupexpenses', gid=session["groupid"]))
 
     
 @app.route('/logout', methods=["POST", "GET"])

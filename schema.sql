@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS expenses (
     name TEXT NOT NULL,
     user_id INTEGER NOT NULL,
     group_id INTEGER,
-    amount FLOAT NOT NULL,
+    amount FLOAT NOT NULL CHECK (amount > 0),
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (group_id) REFERENCES groups(id)
 );

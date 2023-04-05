@@ -14,9 +14,30 @@
 {% endwith %}
 
 <div class="container">
-    <h1>Group Name</h1>
-    <hr>
-    <h2>Expenses</h2>
+    <div class="row">
+      <div class="col-md-8">
+        <h1>{{ groupname[0] }}</h1>
+        <hr>
+        <h2>Expenses</h2>
+        <div style="padding-top: 20px;">
+            <details>
+              <summary>Add Expense</summary>
+              <form action="/addexpenses" method="post">
+                <div class="form-group" style="width: 250px">
+                    <label for="name">Type of Expense:</label>
+                    <input type="text" class="form-control" id="name" name="name" required>
+                  </div>
+                  <div class="form-group" style="width: 250px">
+                    <label for="amount">Amount:</label>
+                    <input type="number" step="0.01" class="form-control" id="amount" name="amount" required>
+                  </div>
+                <!-- form fields go here -->
+                <button type="submit" class="btn btn-primary">Add</button>
+              </form>
+            </details>
+        </div>
+      </div>
+    </div>
     <table class="table">
         <thead class="thead-light">
             <tr>
@@ -25,6 +46,7 @@
                 <th scope="col">Total Amount</th>
                 <th scope="col">Payee</th>
                 <th scope="col">Amount</th>
+                <th scope="col"></th>
             </tr>
         </thead>
         <tbody>
@@ -35,12 +57,16 @@
                             <td>{{ expense[0] }}</td>
                             <td>You</td>
                             <td>{{ expense[3] }}</td>
-                            <td>
+                            <td><ul>
                                 {% for n in names %}
-                                    n[1] owes you: $
+                                    <li>{{ n[1] }} owes you</li>
                                 {% endfor %}
-                            </td>
-                            <td>{{ (expense[3]*(number[0]-1)/number[0])|round(2) }}</td>
+                            </ul></td>
+                            <td><span style="color:green">$ {{ (expense[3]*(number[0]-1)/number[0])|round(2) }}</span></td>
+                            <td><form action="/settleup", method="post">
+                                <input type="hidden" name="expenseid" value="{{ expense[4] }}">
+                                <button type="submit" class="btn btn-danger">Settle Up</button>
+                            </form></td>
                         </tr>
                     {% endif %}
                     {% if expense[1] != session['id'] %}
@@ -48,8 +74,12 @@
                             <td>{{ expense[0] }}</td>
                             <td>{{ expense[2] }}</td>
                             <td>{{ expense[3] }}</td>
-                            <td>You owe: $</td>
-                            <td>{{ (expense[3]/number[0])|round(2) }}</td>
+                            <td>You owe: </td>
+                            <td><span style="color:red">${{ (expense[3]/number[0])|round(2) }}</span></td>
+                            <td><form action="/settleup", method="post">
+                                <input type="hidden" name="expenseid" value="{{ expense[4] }}">
+                                <button type="submit" class="btn btn-danger">Settle Up</button>
+                            </form></td>
                         </tr>
                     {% endif %}
                 {% endfor %}

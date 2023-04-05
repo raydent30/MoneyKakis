@@ -37,5 +37,21 @@ CREATE TRIGGER trigger_check_password
     FOR EACH ROW
     EXECUTE FUNCTION check_password();
 
+CREATE OR REPLACE FUNCTION expenses_amount_check() 
+RETURNS TRIGGER 
+AS $$ 
+BEGIN 
+    IF NEW.amount <= 0 THEN 
+        RAISE EXCEPTION 'Amount must be greater than zero'; 
+    END IF; 
+    RETURN NEW; 
+END; 
+$$ 
+LANGUAGE plpgsql; 
+
+CREATE TRIGGER expenses_amount_trigger 
+BEFORE INSERT ON expenses 
+FOR EACH ROW 
+EXECUTE FUNCTION expenses_amount_check();
 
 
