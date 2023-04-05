@@ -442,6 +442,43 @@ def creategroup():
         flash(f"Group created successfully! Your group ID is: {group_id}. \nPlease save this number and share it, along with your passcode, to anyone who you invite to join your group.", category="success")
     return redirect(url_for("managegroups"))
 
+@app.post("/leavegroup")
+def leavegroup():
+    # Check to make sure that the user that is currently signed in is a member of the group they are trying to leave.
+    g_id = request.form.get("groupid")
+    statement = sqlalchemy.text("SELECT * \
+                            FROM group_members gm \
+                            WHERE gm.group_id = :groupid \
+                            AND gm.user_id = :userid")
+    params = {"groupid": g_id, "userid": session["id"]}
+    res = db.execute(statement, params).fetchone()
+    if res is None:
+        flash("Error: either you are not a member of this group or it does not exist. Please enter a valid Group ID.", category="error")
+    else:   # We can now proceed. The user should only be allowed to leave the group if it has no outstanding expenses.
+        # The following query finds all expenses for the selected group. If the result is none, we can safely remove the user from the group.
+        statement = sqlalchemy.text("SELECT * \
+                                    FROM expenses e \
+                                    WHERE e.group_id = :groupid")
+        params = {"groupid": g_id}
+        res = db.execute(statement, params).fetchone()
+        print(res)
+        if res is None: # We can safely delete the group
+            try:
+                statement = sqlalchemy.text("DELETE FROM group_members gm \
+                                            WHERE gm.user_id = :userid")
+                params = {"userid": session["id"]}
+                db.execute(statement, params)
+            except Exception:   
+                flash("Error: unable to leave group.", category="error")
+            else:
+                db.commit()
+                flash("Successfully left group!")
+        else:
+            flash("You are unable to leave this group as it still has outstanding expenses. \
+                  Please ensure all expenses are settled before leaving the group.")
+    return redirect(url_for("managegroups"))
+
+
 @app.route('/addexpenses', methods=["POST"])
 def addexpense():
     type = request.form.get('name')

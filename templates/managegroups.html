@@ -74,4 +74,24 @@
         </div>
     </form>
 
+
+    <form action="/leavegroup" method="post">
+        <div class="form-group" style="width: 500px; margin: auto; padding-top: 20px;">
+            <h3 align="center"> Leave Group </h3>
+            <label for="groupid"> Group ID: </label>
+            <input
+                type="text"
+                class="form-control"
+                id="groupid"
+                name="groupid"
+                placeholder="Enter the ID of the group you wish to leave"
+                required
+            />
+            <p></p>
+            <button type="submit" class="btn btn-success" style="display: block; margin-block-start: auto;">Leave</button>
+            <p></p>
+        </div>
+        
+    </form>
+
 {% endblock body %}
