@@ -19,6 +19,12 @@ CREATE TRIGGER trigger_check_email_exists
 
 CREATE OR REPLACE FUNCTION check_password() RETURNS TRIGGER AS $$
 BEGIN
+    IF TG_OP = 'UPDATE' THEN
+        IF NEW.password = OLD.password THEN
+            RAISE EXCEPTION 'New password cannot be the same as the previous password';
+        END IF;
+    END IF;
+
     IF LENGTH(NEW.password) < 8 THEN
         RAISE EXCEPTION 'Password must be at least 8 characters long';
     END IF;
@@ -36,6 +42,14 @@ CREATE TRIGGER trigger_check_password
     BEFORE INSERT ON users
     FOR EACH ROW
     EXECUTE FUNCTION check_password();
+
+
+/* checking before password updates */
+CREATE TRIGGER trigger_check_password_before_update
+    BEFORE UPDATE OF password ON users
+    FOR EACH ROW
+    EXECUTE FUNCTION check_password();
+
 
 CREATE OR REPLACE FUNCTION expenses_amount_check() 
 RETURNS TRIGGER 

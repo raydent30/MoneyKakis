@@ -1,21 +1,14 @@
 {% extends "layout.html" %}
 {% block title %} MoneyKakis|Welcome {% endblock %}
 {% block body %}
-
-<div style = "position:absolute; left: 25px; top:10px;">
-    <h1>MoneyKakis</h1>
+<div class="hero-section">
+    <h1> MoneyKakis: Less stress when sharing expenses</h1>
+    <p>Keep track of your shared expenses and balances with housemates, trips, groups, friends, and family.</p>
+    <p></p><p></p>
+    <div display="flex" justify-content="space-between" align-items="center">
+    <a href="/register">Register</a>
+    <a href="/login">Log in</a>
+    </div>
 </div>
-
-<div style = "position:absolute; right: 125px; top: 17px;">
-    <form action="/login" method="get">
-        <button type="submit" class="btn btn-info">Log In</button>
-    </form>
-</div>
-
-<div style = "position:absolute; right: 25px; top: 17px;">
-    <form action="/register" method="get">
-        <button type="submit" class="btn btn-info">Sign Up</button>
-    </form>
-</div>
-
+            
 {% endblock %}

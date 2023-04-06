@@ -17,6 +17,47 @@
       href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css"
       crossorigin="anonymous"
     />
+    <style>
+      /* Add the CSS code here */
+      .hero-section {
+        background-color: #F6F8FA;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 0;
+        text-align: center;
+      }
+      .hero-section h1 {
+        font-size: 48px;
+        font-weight: 800;
+        margin: 0;
+        color: #2F2F2F;
+        line-height: 1.25;
+      }
+      .hero-section p {
+        font-size: 20px;
+        font-weight: 400;
+        margin-top: 16px;
+        margin-bottom: 0;
+        color: #2F2F2F;
+        line-height: 1.5;
+      }
+      .hero-section a {
+        margin-top: 32px;
+        padding: 16px 32px;
+        font-size: 18px;
+        font-weight: 600;
+        border-radius: 100px;
+        background-color: #0072C6;
+        color: #FFFFFF;
+        text-decoration: none;
+        transition: background-color 0.2s;
+      }
+      .hero-section a:hover {
+        background-color: #0060A8;
+      }
+    </style>
     </head>
     <body>
         {% block body %}{% endblock %}
