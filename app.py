@@ -514,7 +514,7 @@ def addexpense():
         db.rollback()
         flash('Amount entered is invalid: make sure amount is greater than $0 and key in 2 decimal places (i.e 30.00)', category='error')
         return redirect(url_for('groupexpenses', gid=g_id))
-    
+
 @app.route('/settleup', methods=["POST"])
 def settleup():
     expense_id = request.form.get('expenseid')
@@ -592,6 +592,6 @@ if __name__ == "__main__":
     # ? Uncomment the below lines and comment the above lines below `if __name__ == "__main__":` in order to run on the production server
     # ? Note that you may have to install waitress running `pip install waitress`
     # ? If you are willing to use waitress-serve command, please add `/home/sadm/.local/bin` to your ~/.bashrc
-    # from waitress import serve
-    # serve(app, host="0.0.0.0", port=PORT)
+    from waitress import serve
+    serve(app, host="0.0.0.0", port=PORT)
 
