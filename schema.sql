@@ -26,13 +26,3 @@ CREATE TABLE IF NOT EXISTS expenses (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (group_id) REFERENCES groups(id)
 );
-CREATE TABLE IF NOT EXISTS transactions (
-    id SERIAL PRIMARY KEY,
-    amount REAL NOT NULL,
-    expense_id INTEGER NOT NULL,
-    payer_id INTEGER NOT NULL,
-    payee_id INTEGER NOT NULL,
-    FOREIGN KEY (expense_id) REFERENCES expenses(id),
-    FOREIGN KEY (payer_id) REFERENCES users(id),
-    FOREIGN KEY (payee_id) REFERENCES users(id)
-);
